@@ -1,3 +1,4 @@
+# /home/julian/ollama-stack/docker-compose.yml
 version: '3.8'
 
 services:
@@ -17,7 +18,6 @@ services:
               capabilities: [gpu]
     restart: unless-stopped
 
-  # Optional: Web UI
   open-webui:
     image: ghcr.io/open-webui/open-webui:main
     container_name: open-webui
