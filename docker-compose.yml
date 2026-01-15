@@ -1,6 +1,3 @@
-# /home/julian/ollama-stack/docker-compose.yml
-version: '3.8'
-
 services:
   ollama:
     image: ollama/ollama
