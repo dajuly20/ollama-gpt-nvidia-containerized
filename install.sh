@@ -930,6 +930,15 @@ full_setup() {
     print_success "Setup abgeschlossen!"
 }
 
+# Funktion zum Prüfen, ob Container bereits laufen
+check_containers_running() {
+    if docker compose ps 2>/dev/null | grep -q "Up"; then
+        return 0  # Container laufen
+    else
+        return 1  # Container laufen nicht
+    fi
+}
+
 # Hauptprogramm
 main() {
     clear
@@ -950,6 +959,54 @@ main() {
         print_error "Bitte führe dieses Script NICHT als root aus"
         print_info "Das Script wird sudo verwenden, wenn nötig"
         exit 1
+    fi
+
+    # Prüfen, ob Container bereits laufen
+    if check_containers_running; then
+        print_success "Container laufen bereits!"
+        echo ""
+        show_running_containers
+        echo ""
+
+        # Frage, ob neu installiert werden soll
+        print_info "Möchtest du neu installieren oder einfach den Browser öffnen?"
+        echo ""
+        echo "1) Browser öffnen (Standard, automatisch in 5 Sekunden)"
+        echo "2) Neu installieren (Container stoppen und neu aufsetzen)"
+        echo ""
+
+        # 5 Sekunden Countdown mit Abbruchmöglichkeit
+        local user_choice="1"
+        for i in 5 4 3 2 1; do
+            echo -ne "${YELLOW}Öffne Browser automatisch in ${i} Sekunden... (Drücke 2 für Neuinstallation)${NC} \r"
+            if read -t 1 -n 1 -r input; then
+                if [ "$input" = "2" ]; then
+                    user_choice="2"
+                    break
+                fi
+            fi
+        done
+        echo -ne "\033[2K\r"  # Zeile löschen
+
+        if [ "$user_choice" = "1" ]; then
+            # Browser öffnen
+            echo ""
+            print_info "Öffne Browser..."
+            open_browser "http://localhost:3000"
+            echo ""
+            print_success "Browser wurde geöffnet!"
+            print_info "Falls nicht automatisch geöffnet: http://localhost:3000"
+            echo ""
+            print_info "Script beendet. Verwende das Menü für weitere Optionen."
+            exit 0
+        else
+            # Neuinstallation
+            echo ""
+            print_warning "Stoppe laufende Container für Neuinstallation..."
+            docker compose down
+            print_success "Container gestoppt"
+            echo ""
+        fi
     fi
 
     # Interaktives Menü oder direkte Ausführung
