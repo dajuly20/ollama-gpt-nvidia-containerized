@@ -34,15 +34,64 @@ docker exec ollama ollama ps            # laeuft ein Modell auf GPU? (Spalte PRO
 überwiegend auf der GPU. (Bei einem 8B-Modell + Context auf 6 GB VRAM bleibt ein kleiner CPU-Rest,
 das ist normal.)
 
-## Modell benutzen
+## Modelle installieren
 
-**Web:** http://localhost:3000 öffnen → Modell oben auswählen → chatten.
+Modelle werden in den laufenden `ollama`-Container geladen und landen automatisch unter
+`/home/julian/ollama` (bleiben also bei Neustart/`down` erhalten). Namen + Tags findest du auf
+<https://ollama.com/library>.
 
-**CLI:**
+**Variante A — CLI (empfohlen):**
 ```bash
-docker exec -it ollama ollama run llama3.1:8b "Hallo, wie geht's?"
-docker exec ollama ollama pull <modell>     # neues Modell holen, z.B. llama3.2:3b
+docker exec ollama ollama pull llama3.2:3b     # Modell herunterladen
+docker exec ollama ollama list                 # installierte Modelle anzeigen
+docker exec ollama ollama rm <modell>          # Modell wieder löschen
 ```
+
+**Variante B — Web-UI:** http://localhost:3000 → oben links aufs Modell-Dropdown → Namen
+eintippen (z. B. `llama3.2:3b`) → „Pull `<modell>`" anklicken. Lädt im Hintergrund.
+
+**Variante C — direkt per API:**
+```bash
+curl http://localhost:11434/api/pull -d '{"name":"llama3.2:3b"}'
+```
+
+### Empfohlene Modelle für die RTX A3000 (6 GB VRAM)
+
+Faustregel: Q4-quantisierte Modelle bis ~8B passen gut; alles bis ~5–6 GB läuft (fast) komplett
+auf der GPU, größere Modelle teilen sich CPU/GPU und werden langsamer.
+
+| Modell | Größe | Zweck |
+|---|---|---|
+| `llama3.2:3b` | ~2 GB | schnell, Alltag, läuft 100 % auf GPU |
+| `llama3.1:8b` | ~4.9 GB | guter Allrounder (bereits installiert), ~93 % GPU |
+| `qwen2.5:7b` | ~4.7 GB | stark bei Code/Reasoning |
+| `gemma2:2b` | ~1.6 GB | sehr schnell, wenig VRAM |
+| `nomic-embed-text` | ~0.3 GB | Embeddings (RAG/Dokumente in Open WebUI) |
+
+Nach dem Pull taucht das Modell sofort im WebUI-Dropdown auf. Testen:
+```bash
+docker exec -it ollama ollama run llama3.2:3b "Hallo, wie geht's?"
+```
+
+> Tiefer: Modellauswahl, Quantisierung, große/uncensored Modelle → `README.md`.
+
+### Komfort: `models`-Helfer (gollama-TUI + Hardware-Empfehlung)
+
+Helfer-Skript `~/BashScripts/scripts/ollama-models.sh` (Alias **`models`**) bündelt alles:
+
+```bash
+models                      # gollama-TUI: installierte Modelle durchblättern/verwalten
+models recommend            # schlägt ein Modell passend zu VRAM/RAM/CPU vor (portabel)
+models list                 # kurze Liste ohne TUI
+models pull llama3.2:3b     # Modell laden
+models rm <modell>          # löschen
+models run llama3.1:8b      # im Terminal chatten
+models web                  # Open WebUI im Browser öffnen
+```
+
+`models recommend` erkennt die Hardware automatisch (NVIDIA-GPU → VRAM, sonst CPU/RAM) und
+nennt ein passendes Modell — funktioniert also auch auf anderen Rechnern. `gollama` wird beim
+ersten Start bei Bedarf via `go install` nachgezogen.
 
 ## Daten (Persistenz)
 
