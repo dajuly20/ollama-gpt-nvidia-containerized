@@ -2,6 +2,8 @@
 
 Dieses Projekt bietet ein vollständiges Setup für Ollama mit GPU-Beschleunigung (NVIDIA) und Open WebUI als Frontend.
 
+**GitHub:** https://github.com/dajuly20/ollama-gpt-nvidia-containerized
+
 ## Überblick
 
 - **Ollama**: Lokal laufende LLM-Engine mit GPU-Unterstützung
